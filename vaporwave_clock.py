@@ -1,5 +1,5 @@
-from tkinter import ttk
 import tkinter as tk
+from tkinter import ttk
 from datetime import datetime
 import math
 import pytz
@@ -11,8 +11,6 @@ class RelojApp:
         self.root.set_theme("radiance")  # Establece el tema "radiance" de ttkthemes
         
         self.root.title("Reloj Analógico y Digital")
-        self.root.geometry("400x550")
-        self.root.protocol("WM_DELETE_WINDOW", self.cerrar_app)
         
         self.root.configure(bg="#000000")  # Fondo negro
         
@@ -30,6 +28,20 @@ class RelojApp:
         self.estacion_label = tk.Label(root, font=("Helvetica", 14), bg="#000000", fg="#FFFFFF")  # Texto en blanco
         self.estacion_label.pack(pady=10)
         
+        # Lista de zonas horarias disponibles
+        self.zonas_horarias = pytz.all_timezones
+        
+        # Barra de selección de zona horaria
+        self.zona_horaria_label = tk.Label(root, text="Selecciona tu zona horaria:", font=("Helvetica", 12), bg="#000000", fg="#FFFFFF")
+        self.zona_horaria_label.pack(pady=10)
+        
+        self.zona_horaria_var = tk.StringVar(root)
+        self.zona_horaria_var.set("America/Bogota")  # Zona horaria predeterminada
+        
+        self.zona_horaria_menu = ttk.Combobox(root, textvariable=self.zona_horaria_var, values=self.zonas_horarias)
+        self.zona_horaria_menu.pack(pady=5)
+        self.zona_horaria_menu.bind("<<ComboboxSelected>>", self.actualizar_reloj)
+        
         self.actualizar_reloj()
     
     def obtener_estacion(self, now):
@@ -43,8 +55,8 @@ class RelojApp:
         else:
             return "Invierno"
     
-    def actualizar_reloj(self):
-        tz = pytz.timezone("America/Bogota")  # Zona horaria de Colombia
+    def actualizar_reloj(self, event=None):
+        tz = pytz.timezone(self.zona_horaria_var.get())  # Obtén la zona horaria seleccionada
         now = datetime.now(tz)
         hora_actual = now.strftime("%H:%M:%S")
         fecha_actual = now.strftime("%A, %d de %B de %Y")
@@ -54,6 +66,9 @@ class RelojApp:
         self.fecha_label.config(text=fecha_actual)
         self.estacion_label.config(text=f"Estación: {estacion_actual}")
         self.dibujar_reloj_analogico(now)
+        self.root.update_idletasks()  # Actualiza el tamaño de la ventana en función del contenido
+        
+        # Programar la actualización cada 1000 ms (1 segundo)
         self.root.after(1000, self.actualizar_reloj)
     
     def dibujar_reloj_analogico(self, now):
